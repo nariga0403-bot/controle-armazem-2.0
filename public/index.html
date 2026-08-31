@@ -1,0 +1,18 @@
+<!doctype html><html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#082c63"><title>Controle de Contêineres — Armazém 2.0</title>
+<link rel="stylesheet" href="/style.css"></head><body>
+<header><div class="head"><div><div class="brand">📦 ARMAZÉM 2.0</div><div class="sub">Controle de Contêineres</div></div><div class="online">● Sistema online</div></div></header>
+<main class="container">
+<section class="card hero"><div class="section-title">Resumo da operação <span id="date"></span></div>
+<div class="stats"><div class="stat"><b id="total">0</b><span>Total</span></div><div class="stat"><b id="final" class="green">0</b><span>Finalizados</span></div><div class="stat"><b id="active" class="orange">0</b><span>Em andamento</span></div><div class="stat"><b id="waiting">0</b><span>Aguardando</span></div><div class="stat"><b id="pending" class="red">0</b><span>Pendências</span></div></div>
+<div class="progress-label"><span>Conclusão</span><strong id="pct">0%</strong></div><div class="progress"><div id="bar"></div></div>
+<div class="actions"><button class="primary" id="newBtn">＋ Nova movimentação</button><button class="secondary" id="exportBtn">⬇ Exportar CSV</button><button class="secondary" id="refreshBtn">↻ Atualizar</button></div></section>
+<nav class="tabs"><button class="tab active" data-tab="todos">Todos</button><button class="tab" data-tab="andamento">Em andamento</button><button class="tab" data-tab="finalizados">Finalizados</button><button class="tab" data-tab="pendencias">Pendências</button><button class="tab" data-tab="areas">Por área</button></nav>
+<section id="listCard" class="card"><div class="searchrow"><input id="search" placeholder="🔎 Buscar contêiner, lote, área ou responsável..."><select id="areaFilter"></select><select id="respFilter"><option value="">Todos os responsáveis</option></select><button class="secondary" id="clearBtn">Limpar</button></div>
+<div class="tablewrap"><table class="table"><thead><tr><th>ID</th><th>Contêiner</th><th>Lote</th><th>Área</th><th>Responsável</th><th>Início</th><th>Finalização</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbody"></tbody></table></div></section>
+<section id="areaCard" class="card hidden"><div class="section-title">📍 Resumo por área</div><div class="tablewrap"><table class="table"><thead><tr><th>Área</th><th>Total</th><th>Finalizados</th><th>Andamento</th><th>Aguardando</th><th>Pendências</th></tr></thead><tbody id="areas"></tbody></table></div></section>
+<div class="footer">Áreas A01–A20, B01–B20 e PÁTIO • Responsáveis: Wendel, Romário e Leone • Armazém 2.0</div></main>
+<div id="modal" class="modal hidden"><div class="modalbox"><div class="modalhead"><div class="section-title">Nova movimentação</div><button class="close" id="closeBtn">✕</button></div>
+<form id="form" class="form"><label class="full">Contêiner<input id="fcontainer" required maxlength="20" autocomplete="off" placeholder="Ex.: SEKU6083897"></label><label>Lote<input id="flote" required maxlength="60" autocomplete="off" placeholder="Ex.: braSC3H0016LG"></label><label>Área<select id="farea" required></select></label><label>Responsável<select id="fresp" required></select></label><label>Status<select id="fstatus" required></select></label><label>Início<input id="fstart" type="datetime-local"></label><label class="full">Observação<textarea id="fobs" rows="3" maxlength="500"></textarea></label><div class="full actions"><button class="success" type="submit">▶ Salvar</button><button class="secondary" type="button" id="cancelBtn">Cancelar</button></div></form></div></div>
+<div id="toast" class="toast"></div><script src="/app.js"></script></body></html>
