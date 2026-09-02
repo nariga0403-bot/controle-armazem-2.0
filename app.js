@@ -7,9 +7,79 @@ async function api(url,opt={}){let r;try{r=await fetch(url,{headers:{'Content-Ty
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(window.tt);window.tt=setTimeout(()=>t.style.display='none',2600)}
 function nowLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
 async function init(){config=await api('/api/config');$('farea').innerHTML=config.areas.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');$('areaFilter').innerHTML='<option value="">Todas as áreas</option>'+config.areas.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');$('fresp').innerHTML=config.responsaveis.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');$('respFilter').innerHTML='<option value="">Todos os responsáveis</option>'+config.responsaveis.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');$('fstatus').innerHTML=config.status.filter(x=>x!=='Finalizado').map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');await load()}
-async function load(){const q=$('search').value.trim(),area=$('areaFilter').value,responsavel=$('respFilter').value,status={andamento:'Em andamento',finalizados:'Finalizado',pendencias:'Pendência'}[tab]||'';const [sum,rows,areas]=await Promise.all([api('/api/resumo'),api('/api/movimentacoes?'+new URLSearchParams({q,area,responsavel,status})),api('/api/areas')]);$('date').textContent=new Date().toLocaleDateString('pt-BR');$('total').textContent=sum.total||0;$('final').textContent=sum.finalizados||0;$('active').textContent=sum.andamento||0;$('waiting').textContent=sum.aguardando||0;$('pending').textContent=sum.pendencias||0;$('pct').textContent=`${sum.percentual||0}%`;$('bar').style.width=`${sum.percentual||0}%`;$('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${x.id}</td><td><b>${esc(x.container)}</b></td><td>${esc(x.lote)}</td><td>${esc(x.area)}</td><td>${esc(x.responsavel)}</td><td>${fmt(x.inicio)}</td><td>${fmt(x.finalizacao)}</td><td>${badge(x.status)}</td><td>${x.status!=='Finalizado'?`<button class="success" onclick="finish(${x.id})">Finalizar</button>`:''} <button class="secondary" onclick="removeRow(${x.id})">Excluir</button></td></tr>`).join(''):'<tr><td colspan="9" style="text-align:center;padding:25px">Nenhuma movimentação encontrada.</td></tr>';$('areas').innerHTML=areas.map(x=>`<tr><td><b>${esc(x.area)}</b></td><td>${x.total}</td><td class="green"><b>${x.finalizados}</b></td><td class="orange"><b>${x.andamento}</b></td><td>${x.aguardando}</td><td class="red">${x.pendencias}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:25px">Nenhuma área com movimentação.</td></tr>'}
-async function finish(id){if(!confirm('Finalizar esta movimentação?'))return;try{await api(`/api/movimentacoes/${id}/finalizar`,{method:'PATCH'});toast('Movimentação finalizada.');await load()}catch(e){alert(e.message)}}
-async function removeRow(id){if(!confirm('Excluir esta movimentação?'))return;try{await api(`/api/movimentacoes/${id}`,{method:'DELETE'});toast('Movimentação excluída.');await load()}catch(e){alert(e.message)}}
+async function finish(id){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+
+  const agora=new Date();
+  const data=agora.toISOString().slice(0,10);
+  const hora=agora.toTimeString().slice(0,5);
+
+  modal.innerHTML=`
+    <div style="background:white;border-radius:14px;padding:22px;width:min(420px,100%);box-shadow:0 10px 40px rgba(0,0,0,.3)">
+      <h2 style="margin-top:0">Finalizar contêiner</h2>
+
+      <label><b>Responsável pela finalização</b></label>
+      <select id="finalResponsavel" style="width:100%;padding:12px;margin:6px 0 14px;border-radius:8px">
+        <option>Wendel</option>
+        <option>Romário</option>
+        <option>Leone</option>
+      </select>
+
+      <label><b>Data de finalização</b></label>
+      <input id="finalData" type="date" value="${data}" style="width:100%;padding:12px;margin:6px 0 14px;border-radius:8px">
+
+      <label><b>Horário de finalização</b></label>
+      <input id="finalHora" type="time" value="${hora}" style="width:100%;padding:12px;margin:6px 0 20px;border-radius:8px">
+
+      <div style="display:flex;gap:10px">
+        <button id="cancelarFinal" type="button" style="flex:1;padding:12px;border:0;border-radius:8px">
+          Cancelar
+        </button>
+
+        <button id="confirmarFinal" type="button" style="flex:1;padding:12px;border:0;border-radius:8px;background:#198754;color:white">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelector('#cancelarFinal').onclick=()=>{
+    modal.remove();
+  };
+
+  modal.querySelector('#confirmarFinal').onclick=async()=>{
+    const responsavel=modal.querySelector('#finalResponsavel').value;
+    const dataFinal=modal.querySelector('#finalData').value;
+    const horaFinal=modal.querySelector('#finalHora').value;
+
+    if(!dataFinal||!horaFinal){
+      alert('Informe a data e o horário da finalização.');
+      return;
+    }
+
+    const finalizacao=`${dataFinal}T${horaFinal}:00`;
+
+    try{
+      await api(`/api/movimentacoes/${id}/finalizar`,{
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          responsavel,
+          finalizacao
+        })
+      });
+
+      modal.remove();
+      await load();
+    }catch(e){
+      alert(e.message);
+    }
+  };
+
+
 function openModal(){$('modal').classList.remove('hidden');$('fstart').value=nowLocal();$('fcontainer').focus()}
 function closeModal(){$('modal').classList.add('hidden');$('form').reset()}
 $('newBtn').onclick=openModal;$('closeBtn').onclick=closeModal;$('cancelBtn').onclick=closeModal;$('refreshBtn').onclick=()=>load();$('clearBtn').onclick=()=>{$('search').value='';$('areaFilter').value='';$('respFilter').value='';load()};$('search').oninput=load;$('areaFilter').onchange=load;$('respFilter').onchange=load;
