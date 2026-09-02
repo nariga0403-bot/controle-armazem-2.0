@@ -88,10 +88,31 @@ app.post('/api/movimentacoes',(req,res)=>{
 });
 
 app.patch('/api/movimentacoes/:id/finalizar',(req,res)=>{
-  const id=Number(req.params.id);
-  const result=db.prepare(`UPDATE movimentacoes SET status='Finalizado',finalizacao=?,atualizado_em=CURRENT_TIMESTAMP WHERE id=?`).run(new Date().toISOString(),id);
-  if(!result.changes)return res.status(404).json({erro:'Movimentação não encontrada.'});
-  res.json(db.prepare('SELECT * FROM movimentacoes WHERE id=?').get(id));
+  const id = Number(req.params.id);
+  const responsavel = clean(req.body.responsavel);
+  const finalizacao = clean(req.body.finalizacao);
+
+  if(!id) return res.status(400).json({erro:'ID inválido.'});
+  if(!validEnum(responsavel,RESPONSAVEIS))
+    return res.status(400).json({erro:'Responsável inválido.'});
+
+  const horarioFinalizacao = finalizacao || new Date().toISOString();
+
+  const result = db.prepare(`
+    UPDATE movimentacoes
+    SET status='Finalizado',
+        responsavel=?,
+        finalizacao=?,
+        atualizado_em=CURRENT_TIMESTAMP
+    WHERE id=?
+  `).run(responsavel,horarioFinalizacao,id);
+
+  if(!result.changes)
+    return res.status(404).json({erro:'Movimentação não encontrada.'});
+
+  res.json(
+    db.prepare('SELECT * FROM movimentacoes WHERE id=?').get(id)
+  );
 });
 
 app.delete('/api/movimentacoes/:id',(req,res)=>{
