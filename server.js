@@ -89,12 +89,26 @@ app.post('/api/movimentacoes',(req,res)=>{
 
 app.patch('/api/movimentacoes/:id/finalizar',(req,res)=>{
   const id = Number(req.params.id);
-  const responsavel = clean(req.body.responsavel);
-  const finalizacao = clean(req.body.finalizacao);
+  const responsavelRecebido = clean(req.body.responsavel);
+const finalizacao = clean(req.body.finalizacao);
 
-  if(!id) return res.status(400).json({erro:'ID inválido.'});
-  if(!responsavel){
-  return res.status(400).json({erro:'Informe o responsável pela finalização.'});
+if(!id) return res.status(400).json({erro:'ID inválido.'});
+
+const normalizar = texto =>
+  String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .trim()
+    .toLowerCase();
+
+const responsavelEncontrado = RESPONSAVEIS.find(
+  nome => normalizar(nome) === normalizar(responsavelRecebido)
+);
+
+if(!responsavelEncontrado)
+  return res.status(400).json({erro:'Responsável inválido.'});
+
+const responsavel = responsavelEncontrado;
 }
 
   const horarioFinalizacao = finalizacao || new Date().toISOString();
