@@ -21,9 +21,9 @@ async function finish(id){
 
       <label><b>Responsável pela finalização</b></label>
       <select id="finalResponsavel" style="width:100%;padding:12px;margin:6px 0 14px;border-radius:8px">
-        <option>Wendel</option>
-        <option>Romário</option>
-        <option>Leone</option>
+        <option value="Wendel">Wendel</option>
+<option value="Romário">Romário</option>
+<option value="Leone">Leone</option>
       </select>
 
       <label><b>Data de finalização</b></label>
