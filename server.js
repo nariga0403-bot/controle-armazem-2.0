@@ -93,8 +93,9 @@ app.patch('/api/movimentacoes/:id/finalizar',(req,res)=>{
   const finalizacao = clean(req.body.finalizacao);
 
   if(!id) return res.status(400).json({erro:'ID inválido.'});
-  if(!validEnum(responsavel,RESPONSAVEIS))
-    return res.status(400).json({erro:'Responsável inválido.'});
+  if(!responsavel){
+  return res.status(400).json({erro:'Informe o responsável pela finalização.'});
+}
 
   const horarioFinalizacao = finalizacao || new Date().toISOString();
 
