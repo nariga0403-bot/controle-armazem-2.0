@@ -109,7 +109,7 @@ if(!responsavelEncontrado)
   return res.status(400).json({erro:'Responsável inválido.'});
 
 const responsavel = responsavelEncontrado;
-}
+
 
   const horarioFinalizacao = finalizacao || new Date().toISOString();
 
